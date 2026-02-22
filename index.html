@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enel Store - Contas Blox Fruits</title>
+
+<style>
+body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #0A0A8F, #05054A);
+    color:white;
+}
+
+header{
+    padding:20px;
+    text-align:center;
+    font-size:28px;
+    font-weight:bold;
+    color:#00ffff;
+}
+
+.container{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding:20px;
+}
+
+.card{
+    background:#111;
+    width:280px;
+    margin:15px;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 0 15px #000;
+    transition:0.3s;
+}
+
+.card:hover{
+    transform:scale(1.05);
+}
+
+.card img{
+    width:100%;
+    border-radius:8px;
+}
+
+.price{
+    color:#00ffff;
+    font-size:18px;
+    margin:10px 0;
+}
+
+.stock{
+    font-size:14px;
+    margin-bottom:10px;
+}
+
+button{
+    width:100%;
+    padding:10px;
+    background:#00ffff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    background:#00cccc;
+}
+
+.comments{
+    margin-top:10px;
+    font-size:14px;
+}
+
+.comments input{
+    width:100%;
+    padding:5px;
+    margin-top:5px;
+}
+
+.chat{
+    position:fixed;
+    bottom:0;
+    right:0;
+    width:280px;
+    background:#111;
+    border-top-left-radius:10px;
+}
+
+.chat-header{
+    background:#00ffff;
+    color:black;
+    padding:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.chat-body{
+    display:none;
+    padding:10px;
+}
+
+.chat-body input{
+    width:100%;
+    padding:5px;
+}
+</style>
+</head>
+<body>
+
+<header>⚡ ENEL STORE ⚡</header>
+
+<div class="container" id="products"></div>
+
+<div class="chat">
+<div class="chat-header" onclick="toggleChat()">Chat - Dúvidas</div>
+<div class="chat-body" id="chatBody">
+<div id="chatMessages"></div>
+<input type="text" placeholder="Digite sua dúvida..." onkeydown="sendChat(event)">
+</div>
+</div>
+
+<script>
+const products = [
+{name:"GÁS INVENTÁRIO", price:"R$ 6,49", stock:1, img:"https://via.placeholder.com/280x150"},
+{name:"YETI INVENTÁRIO", price:"R$ 8,99", stock:1, img:"https://via.placeholder.com/280x150"},
+{name:"DOUGH INVENTÁRIO", price:"R$ 6,99", stock:1, img:"https://via.placeholder.com/280x150"},
+{name:"1 MÍTICA ALEATÓRIA", price:"R$ 4,99", stock:2, img:"https://via.placeholder.com/280x150"},
+{name:"2 MÍTICAS ALEATÓRIAS", price:"R$ 6,99", stock:4, img:"https://via.placeholder.com/280x150"}
+];
+
+function loadProducts(){
+const container=document.getElementById("products");
+container.innerHTML="";
+products.forEach((p,i)=>{
+let card=document.createElement("div");
+card.className="card";
+card.innerHTML=`
+<img src="${p.img}">
+<h3>CONTA LVL MAX + GOD HUMAN + ${p.name}</h3>
+<div class="price">${p.price}</div>
+<div class="stock">Estoque: ${p.stock}</div>
+<button onclick="buy()">Comprar</button>
+<div class="comments">
+<h4>Comentários:</h4>
+<div id="comments-${i}"></div>
+<input type="text" placeholder="Comentar..." onkeydown="addComment(event,${i})">
+</div>
+`;
+container.appendChild(card);
+});
+}
+
+function buy(){
+alert("Sistema de pagamento será integrado aqui.");
+}
+
+function addComment(e,index){
+if(e.key==="Enter"){
+let text=e.target.value;
+if(text.trim()!=""){
+let div=document.getElementById("comments-"+index);
+let p=document.createElement("p");
+p.textContent="🗨️ "+text;
+div.appendChild(p);
+e.target.value="";
+}
+}
+}
+
+function toggleChat(){
+let body=document.getElementById("chatBody");
+body.style.display=body.style.display==="block"?"none":"block";
+}
+
+function sendChat(e){
+if(e.key==="Enter"){
+let msg=e.target.value;
+if(msg.trim()!=""){
+let div=document.getElementById("chatMessages");
+let p=document.createElement("p");
+p.textContent="👤 "+msg;
+div.appendChild(p);
+e.target.value="";
+}
+}
+}
+
+loadProducts();
+</script>
+
+</body>
+</html>
