@@ -3,111 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enel Store - Contas Blox Fruits</title>
+<title>Enel Store - Blox Fruits</title>
 
 <style>
 body{
     margin:0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(180deg, #0A0A8F, #05054A);
+    font-family:Arial, sans-serif;
+    background: linear-gradient(180deg,#0A0A8F,#05054A);
     color:white;
 }
-
 header{
-    padding:20px;
     text-align:center;
-    font-size:28px;
+    padding:20px;
+    font-size:30px;
     font-weight:bold;
     color:#00ffff;
 }
-
 .container{
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
-    padding:20px;
 }
-
 .card{
     background:#111;
-    width:280px;
-    margin:15px;
-    padding:15px;
+    width:220px;
+    margin:12px;
+    padding:12px;
     border-radius:12px;
+    text-align:center;
     box-shadow:0 0 15px #000;
     transition:0.3s;
 }
-
 .card:hover{
     transform:scale(1.05);
 }
-
 .card img{
-    width:100%;
-    border-radius:8px;
+    width:120px;
+    height:120px;
+    object-fit:contain;
 }
-
-.price{
-    color:#00ffff;
-    font-size:18px;
-    margin:10px 0;
-}
-
-.stock{
-    font-size:14px;
-    margin-bottom:10px;
-}
-
 button{
-    width:100%;
-    padding:10px;
-    background:#00ffff;
+    padding:8px;
+    margin-top:8px;
     border:none;
     border-radius:6px;
     cursor:pointer;
     font-weight:bold;
 }
-
-button:hover{
+.buy{
+    background:#00ffff;
+}
+.buy:hover{
     background:#00cccc;
 }
-
-.comments{
-    margin-top:10px;
-    font-size:14px;
-}
-
-.comments input{
-    width:100%;
-    padding:5px;
-    margin-top:5px;
-}
-
-.chat{
+.admin-btn{
+    background:red;
+    color:white;
     position:fixed;
-    bottom:0;
-    right:0;
-    width:280px;
-    background:#111;
-    border-top-left-radius:10px;
+    top:10px;
+    right:10px;
 }
-
-.chat-header{
-    background:#00ffff;
-    color:black;
-    padding:10px;
-    cursor:pointer;
-    font-weight:bold;
-}
-
-.chat-body{
+.admin-panel{
     display:none;
-    padding:10px;
+    position:fixed;
+    top:60px;
+    right:10px;
+    background:#111;
+    padding:15px;
+    border-radius:10px;
+    max-height:400px;
+    overflow:auto;
 }
-
-.chat-body input{
-    width:100%;
-    padding:5px;
+input{
+    width:60px;
+}
+.stock{
+    margin-top:5px;
+    font-size:14px;
 }
 </style>
 </head>
@@ -115,83 +87,99 @@ button:hover{
 
 <header>⚡ ENEL STORE ⚡</header>
 
+<button class="admin-btn" onclick="loginAdmin()">Modo Dono</button>
+
+<div class="admin-panel" id="adminPanel"></div>
+
 <div class="container" id="products"></div>
 
-<div class="chat">
-<div class="chat-header" onclick="toggleChat()">Chat - Dúvidas</div>
-<div class="chat-body" id="chatBody">
-<div id="chatMessages"></div>
-<input type="text" placeholder="Digite sua dúvida..." onkeydown="sendChat(event)">
-</div>
-</div>
-
 <script>
-const products = [
-{name:"GÁS INVENTÁRIO", price:"R$ 6,49", stock:1, img:"https://via.placeholder.com/280x150"},
-{name:"YETI INVENTÁRIO", price:"R$ 8,99", stock:1, img:"https://via.placeholder.com/280x150"},
-{name:"DOUGH INVENTÁRIO", price:"R$ 6,99", stock:1, img:"https://via.placeholder.com/280x150"},
-{name:"1 MÍTICA ALEATÓRIA", price:"R$ 4,99", stock:2, img:"https://via.placeholder.com/280x150"},
-{name:"2 MÍTICAS ALEATÓRIAS", price:"R$ 6,99", stock:4, img:"https://via.placeholder.com/280x150"}
+
+const password = "1234"; // MUDE A SENHA AQUI
+
+const fruits = [
+"Leopard","Dragon","Kitsune","Dough","Spirit","Venom","Shadow",
+"Control","Mammoth","T-Rex","Blizzard","Gravity","Phoenix",
+"Rumble","Portal","Pain","Spider","Love","Buddha","Light",
+"Dark","Ice","Flame","Sand","Smoke","Magma","Quake"
 ];
 
-function loadProducts(){
-const container=document.getElementById("products");
-container.innerHTML="";
-products.forEach((p,i)=>{
-let card=document.createElement("div");
-card.className="card";
-card.innerHTML=`
-<img src="${p.img}">
-<h3>CONTA LVL MAX + GOD HUMAN + ${p.name}</h3>
-<div class="price">${p.price}</div>
-<div class="stock">Estoque: ${p.stock}</div>
-<button onclick="buy()">Comprar</button>
-<div class="comments">
-<h4>Comentários:</h4>
-<div id="comments-${i}"></div>
-<input type="text" placeholder="Comentar..." onkeydown="addComment(event,${i})">
-</div>
-`;
-container.appendChild(card);
+let stockData = JSON.parse(localStorage.getItem("stock")) || {};
+
+fruits.forEach(f=>{
+    if(stockData[f] == null) stockData[f] = 0;
 });
+
+function saveStock(){
+    localStorage.setItem("stock", JSON.stringify(stockData));
 }
 
-function buy(){
-alert("Sistema de pagamento será integrado aqui.");
+function loadProducts(){
+    const container = document.getElementById("products");
+    container.innerHTML = "";
+
+    fruits.forEach(f=>{
+        let imgName = f.toLowerCase().replace(" ", "");
+        let imageUrl = `https://robohash.org/${imgName}?set=set4`;
+
+        let card = document.createElement("div");
+        card.className="card";
+
+        card.innerHTML=`
+        <img src="${imageUrl}">
+        <h3>${f}</h3>
+        <div class="stock">Estoque: ${stockData[f]}</div>
+        <button class="buy" onclick="buy('${f}')">Comprar</button>
+        `;
+
+        container.appendChild(card);
+    });
 }
 
-function addComment(e,index){
-if(e.key==="Enter"){
-let text=e.target.value;
-if(text.trim()!=""){
-let div=document.getElementById("comments-"+index);
-let p=document.createElement("p");
-p.textContent="🗨️ "+text;
-div.appendChild(p);
-e.target.value="";
-}
-}
+function buy(fruit){
+    if(stockData[fruit] > 0){
+        stockData[fruit]--;
+        saveStock();
+        loadProducts();
+        alert("Compra realizada com sucesso!");
+    }else{
+        alert("Produto esgotado!");
+    }
 }
 
-function toggleChat(){
-let body=document.getElementById("chatBody");
-body.style.display=body.style.display==="block"?"none":"block";
+function loginAdmin(){
+    let pass = prompt("Microondas.123:");
+    if(pass === password){
+        showAdmin();
+    }else{
+        alert("Senha incorreta!");
+    }
 }
 
-function sendChat(e){
-if(e.key==="Enter"){
-let msg=e.target.value;
-if(msg.trim()!=""){
-let div=document.getElementById("chatMessages");
-let p=document.createElement("p");
-p.textContent="👤 "+msg;
-div.appendChild(p);
-e.target.value="";
+function showAdmin(){
+    let panel = document.getElementById("adminPanel");
+    panel.style.display="block";
+    panel.innerHTML="<h3>Painel Dono</h3>";
+
+    fruits.forEach(f=>{
+        panel.innerHTML += `
+        <div>
+        ${f}
+        <input type="number" value="${stockData[f]}" 
+        onchange="updateStock('${f}', this.value)">
+        </div>
+        `;
+    });
 }
-}
+
+function updateStock(fruit,value){
+    stockData[fruit] = parseInt(value);
+    saveStock();
+    loadProducts();
 }
 
 loadProducts();
+
 </script>
 
 </body>
