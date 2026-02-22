@@ -3,182 +3,190 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Enel Store - Blox Fruits</title>
+<title>Loja Profissional</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background: linear-gradient(180deg,#0A0A8F,#05054A);
-    color:white;
-}
-header{
-    text-align:center;
-    padding:20px;
-    font-size:30px;
-    font-weight:bold;
-    color:#00ffff;
-}
-.container{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-}
-.card{
-    background:#111;
-    width:220px;
-    margin:12px;
-    padding:12px;
-    border-radius:12px;
-    text-align:center;
-    box-shadow:0 0 15px #000;
-    transition:0.3s;
-}
-.card:hover{
-    transform:scale(1.05);
-}
-.card img{
-    width:120px;
-    height:120px;
-    object-fit:contain;
-}
-button{
-    padding:8px;
-    margin-top:8px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    font-weight:bold;
-}
-.buy{
-    background:#00ffff;
-}
-.buy:hover{
-    background:#00cccc;
-}
-.admin-btn{
-    background:red;
-    color:white;
-    position:fixed;
-    top:10px;
-    right:10px;
-}
-.admin-panel{
-    display:none;
-    position:fixed;
-    top:60px;
-    right:10px;
-    background:#111;
-    padding:15px;
-    border-radius:10px;
-    max-height:400px;
-    overflow:auto;
-}
-input{
-    width:60px;
-}
-.stock{
-    margin-top:5px;
-    font-size:14px;
-}
+body{margin:0;font-family:Arial;background:#0f0f0f;color:white;}
+header{background:#000;padding:15px;text-align:center;font-size:22px;font-weight:bold;}
+.topo{background:#111;padding:10px;text-align:center;font-size:14px;}
+.container{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;padding:15px;}
+.card{background:#1c1c1c;padding:15px;border-radius:10px;position:relative;}
+.card button{width:100%;padding:10px;background:#00ff88;border:none;border-radius:5px;font-weight:bold;cursor:pointer;}
+.card button:hover{background:#00cc6a;}
+.selo{position:absolute;top:10px;right:10px;background:gold;color:black;padding:5px;border-radius:5px;font-size:12px;font-weight:bold;}
+.ranking{background:#111;margin:15px;padding:15px;border-radius:10px;}
+.carrinho{position:fixed;bottom:0;left:0;right:0;background:#000;padding:10px;text-align:center;}
+.carrinho button{padding:10px 20px;background:#00ff88;border:none;border-radius:5px;font-weight:bold;}
+.admin{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;padding:20px;border-radius:10px;}
+input{padding:5px;margin:5px 0;width:100%;}
+@media(max-width:600px){.container{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<header>⚡ ENEL STORE ⚡</header>
+<header>🔥 Loja Premium 🔥</header>
 
-<button class="admin-btn" onclick="loginAdmin()">Modo Dono</button>
+<div class="topo">
+📦 Vendas: <span id="contadorVendas"></span> |
+👥 Online: <span id="onlineAgora"></span>
+</div>
 
-<div class="admin-panel" id="adminPanel"></div>
+<div class="ranking">
+<h2>🏆 Top 3 Mais Vendidos</h2>
+<ul id="rankingProdutos"></ul>
+</div>
 
-<div class="container" id="products"></div>
+<div class="container" id="listaProdutos"></div>
+
+<div class="carrinho">
+🛒 Itens: <span id="qtdCarrinho"></span>
+<br><br>
+<button onclick="finalizar()">Finalizar no WhatsApp</button>
+<button onclick="pix()">Pagar com PIX</button>
+</div>
+
+<div class="admin" id="painelAdmin">
+<h3>Painel Admin</h3>
+<input type="password" id="senhaAdmin" placeholder="Senha">
+<button onclick="entrarAdmin()">Entrar</button>
+<div id="adminConteudo" style="display:none;">
+<h4>Editar Estoque</h4>
+<div id="editarProdutos"></div>
+</div>
+</div>
 
 <script>
 
-const password = "1234"; // MUDE A SENHA AQUI
+let numeroWhats="5516997493871";
+let chavePix="5516997493871";
 
-const fruits = [
-"Leopard","Dragon","Kitsune","Dough","Spirit","Venom","Shadow",
-"Control","Mammoth","T-Rex","Blizzard","Gravity","Phoenix",
-"Rumble","Portal","Pain","Spider","Love","Buddha","Light",
-"Dark","Ice","Flame","Sand","Smoke","Magma","Quake"
+let produtos=JSON.parse(localStorage.getItem("produtos"))||[
+{nome:"Produto A",preco:49.90,estoque:10,vendidos:5},
+{nome:"Produto B",preco:79.90,estoque:8,vendidos:2},
+{nome:"Produto C",preco:99.90,estoque:6,vendidos:1}
 ];
 
-let stockData = JSON.parse(localStorage.getItem("stock")) || {};
+let vendas=parseInt(localStorage.getItem("vendas"))||37;
+let carrinho=[];
 
-fruits.forEach(f=>{
-    if(stockData[f] == null) stockData[f] = 0;
+function salvar(){
+localStorage.setItem("produtos",JSON.stringify(produtos));
+localStorage.setItem("vendas",vendas);
+}
+
+function render(){
+let lista=document.getElementById("listaProdutos");
+lista.innerHTML="";
+let top=[...produtos].sort((a,b)=>b.vendidos-a.vendidos)[0];
+
+produtos.forEach((p,i)=>{
+let selo="";
+if(p.nome===top.nome && p.vendidos>0){
+selo='<div class="selo">🥇 Mais Vendido</div>';
+}
+lista.innerHTML+=`
+<div class="card">
+${selo}
+<h3>${p.nome}</h3>
+<p>R$ ${p.preco.toFixed(2)}</p>
+<p>Estoque: ${p.estoque}</p>
+<button onclick="addCarrinho(${i})">Adicionar</button>
+</div>`;
+});
+}
+
+function addCarrinho(i){
+if(produtos[i].estoque>0){
+carrinho.push(i);
+renderCarrinho();
+}
+}
+
+function renderCarrinho(){
+document.getElementById("qtdCarrinho").innerText=carrinho.length;
+}
+
+function finalizar(){
+if(carrinho.length===0)return;
+let msg="Olá quero comprar:%0A";
+let total=0;
+
+carrinho.forEach(i=>{
+msg+=`- ${produtos[i].nome}%0A`;
+produtos[i].estoque--;
+produtos[i].vendidos++;
+total+=produtos[i].preco;
 });
 
-function saveStock(){
-    localStorage.setItem("stock", JSON.stringify(stockData));
+msg+=`Total: R$ ${total.toFixed(2)}`;
+vendas++;
+salvar();
+
+window.open(`https://wa.me/${numeroWhats}?text=${msg}`);
+
+carrinho=[];
+render();
+renderCarrinho();
+atualizar();
 }
 
-function loadProducts(){
-    const container = document.getElementById("products");
-    container.innerHTML = "";
-
-    fruits.forEach(f=>{
-        let imgName = f.toLowerCase().replace(" ", "");
-        let imageUrl = `https://robohash.org/${imgName}?set=set4`;
-
-        let card = document.createElement("div");
-        card.className="card";
-
-        card.innerHTML=`
-        <img src="${imageUrl}">
-        <h3>${f}</h3>
-        <div class="stock">Estoque: ${stockData[f]}</div>
-        <button class="buy" onclick="buy('${f}')">Comprar</button>
-        `;
-
-        container.appendChild(card);
-    });
+function pix(){
+alert("Chave PIX: "+chavePix);
+navigator.clipboard.writeText(chavePix);
 }
 
-function buy(fruit){
-    if(stockData[fruit] > 0){
-        stockData[fruit]--;
-        saveStock();
-        loadProducts();
-        alert("Compra realizada com sucesso!");
-    }else{
-        alert("Produto esgotado!");
-    }
+function atualizar(){
+document.getElementById("contadorVendas").innerText=vendas;
+let online=Math.floor(Math.random()*(18-7)+7);
+document.getElementById("onlineAgora").innerText=online;
+atualizarRanking();
 }
 
-function loginAdmin(){
-    let pass = prompt("Microondas.123:");
-    if(pass === password){
-        showAdmin();
-    }else{
-        alert("Senha incorreta!");
-    }
+function atualizarRanking(){
+let ranking=[...produtos].sort((a,b)=>b.vendidos-a.vendidos).slice(0,3);
+let lista=document.getElementById("rankingProdutos");
+lista.innerHTML="";
+ranking.forEach(p=>{
+lista.innerHTML+=`<li>${p.nome} - ${p.vendidos} vendas</li>`;
+});
 }
 
-function showAdmin(){
-    let panel = document.getElementById("adminPanel");
-    panel.style.display="block";
-    panel.innerHTML="<h3>Painel Dono</h3>";
-
-    fruits.forEach(f=>{
-        panel.innerHTML += `
-        <div>
-        ${f}
-        <input type="number" value="${stockData[f]}" 
-        onchange="updateStock('${f}', this.value)">
-        </div>
-        `;
-    });
+function entrarAdmin(){
+let senha=document.getElementById("senhaAdmin").value;
+if(senha==="Microondas.123"){
+document.getElementById("adminConteudo").style.display="block";
+editarAdmin();
+}
 }
 
-function updateStock(fruit,value){
-    stockData[fruit] = parseInt(value);
-    saveStock();
-    loadProducts();
+function editarAdmin(){
+let div=document.getElementById("editarProdutos");
+div.innerHTML="";
+produtos.forEach((p,i)=>{
+div.innerHTML+=`
+<p>${p.nome} Estoque:
+<input type="number" value="${p.estoque}" onchange="alterarEstoque(${i},this.value)">
+</p>`;
+});
 }
 
-loadProducts();
+function alterarEstoque(i,val){
+produtos[i].estoque=parseInt(val);
+salvar();
+render();
+}
+
+setInterval(atualizar,3000);
+
+render();
+renderCarrinho();
+atualizar();
+
+document.addEventListener("keydown",function(e){
+if(e.ctrlKey && e.key==="m"){
+document.getElementById("painelAdmin").style.display="block";
+}
+});
 
 </script>
 
